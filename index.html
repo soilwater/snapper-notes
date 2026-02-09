@@ -36,18 +36,22 @@
             background: #fff;
             color: var(--text);
             line-height: 1.5;
-            overflow: hidden;
+            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
         
-        .app {
+        .app{
             max-width: 480px;
             margin: 0 auto;
-            height: 100dvh;   /* modern, correct */
-            height: 100vh;    /* fallback */
+
+            height: 100dvh;
+            height: 100vh;
+
             display: flex;
             flex-direction: column;
             background: #fff;
+
+            padding-top: env(safe-area-inset-top);
         }
         
         .header {
