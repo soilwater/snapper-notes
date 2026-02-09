@@ -874,18 +874,36 @@
         // ====== IMAGE EXPORT CONFIGURATION ======
         // Easy tuning for downloaded image metadata appearance
         const EXPORT_CONFIG = {
-            footerHeight: 220,           // Total height of metadata footer (pixels)
-            backgroundColor: '#ffffff',   // Footer background color (try: '#ffffff', '#f5f5f5', '#fafafa')
-            textColor: '#1a1a1a',        // Text color
-            fontSize: 18,                // Base font size (pixels)
-            fontFamily: 'Inter',         // Font family
-            lineSpacing: 28,             // Space between lines (pixels)
-            padding: 20,                 // Left/right padding (pixels)
-            labelWidth: 100,             // Width reserved for labels like "Timestamp:" (pixels)
-            showBorder: true,            // Show top border line
-            borderColor: '#e0e0e0',      // Border color
-            borderWidth: 2               // Border thickness (pixels)
+        width: 1200,
+
+        // photo area: scaled to width, height depends on source aspect ratio
+        metaHeight: 420,              // fixed metadata block height (tweak once)
+
+        backgroundColor: '#ffffff',
+        borderColor: '#e0e0e0',
+        borderWidth: 3,
+
+        paddingX: 52,
+        paddingY: 42,
+        labelColWidth: 210,
+        gutter: 26,
+
+        fontFamily: 'Inter',
+        labelSize: 28,
+        valueSize: 28,
+        headerSize: 34,
+
+        lineHeight: 40,
+        rowGap: 14,
+
+        // comment formatting
+        commentMaxChars: 200,
+        commentLines: 3,              // fixed # of lines reserved for comment
+        commentCharsPerLine: 54       // fixed wrap width by characters
         };
+
+
+
         // =========================================
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -1135,7 +1153,8 @@
         }
         
         function saveCapture() {
-            const comment = document.getElementById('commentInput').value.trim();
+            const rawComment = document.getElementById('commentInput').value.trim();
+            const comment = rawComment.slice(0, EXPORT_CONFIG.commentMaxChars);
             
             if (!comment) {
                 showToast('Please add a comment', 'error');
@@ -1235,69 +1254,102 @@
 
             const img = new Image();
             img.onload = () => {
+                const W = EXPORT_CONFIG.width;
+                const scale = W / img.width;
+                const imgH = Math.round(img.height * scale);
+
                 const canvas = document.createElement('canvas');
+                canvas.width = W;
+                canvas.height = imgH + EXPORT_CONFIG.metaHeight;
+
                 const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.textBaseline = 'top';
 
-                canvas.width = img.width;
-                canvas.height = img.height + EXPORT_CONFIG.footerHeight;
+                // --- photo ---
+                ctx.drawImage(img, 0, 0, W, imgH);
 
-                ctx.drawImage(img, 0, 0);
-
+                // --- metadata background ---
                 ctx.fillStyle = EXPORT_CONFIG.backgroundColor;
-                ctx.fillRect(0, img.height, canvas.width, EXPORT_CONFIG.footerHeight);
+                ctx.fillRect(0, imgH, W, EXPORT_CONFIG.metaHeight);
 
-                if (EXPORT_CONFIG.showBorder) {
+                // divider
                 ctx.strokeStyle = EXPORT_CONFIG.borderColor;
                 ctx.lineWidth = EXPORT_CONFIG.borderWidth;
                 ctx.beginPath();
-                ctx.moveTo(0, img.height);
-                ctx.lineTo(canvas.width, img.height);
+                ctx.moveTo(0, imgH);
+                ctx.lineTo(W, imgH);
                 ctx.stroke();
+
+                // text helpers
+                const xLabel = EXPORT_CONFIG.paddingX;
+                const xValue = xLabel + EXPORT_CONFIG.labelColWidth + EXPORT_CONFIG.gutter;
+
+                const setFont = (weight, size) => {
+                ctx.font = `${weight} ${size}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
+                };
+
+                const drawRow = (label, value, y) => {
+                setFont(650, EXPORT_CONFIG.labelSize);
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillText(label, xLabel, y);
+
+                setFont(500, EXPORT_CONFIG.valueSize);
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillText(value, xValue, y);
+
+                return y + EXPORT_CONFIG.lineHeight; // fixed advance
+                };
+
+                // --- header ---
+                let y = imgH + EXPORT_CONFIG.paddingY;
+                setFont(700, EXPORT_CONFIG.headerSize);
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillText('Snapper Notes', EXPORT_CONFIG.paddingX, y);
+
+                // tagline (fixed)
+                setFont(500, 22);
+                ctx.fillStyle = '#666';
+                ctx.fillText('Field notes with zero friction', EXPORT_CONFIG.paddingX, y + EXPORT_CONFIG.headerSize + 6);
+
+                y += EXPORT_CONFIG.headerSize + 42;
+
+                // --- fixed rows (no wrapping) ---
+                const ts = formatTimestamp(capture.timestamp);
+
+                const lat = capture.location ? capture.location.latitude.toFixed(6) : 'Not available';
+                const lon = capture.location ? capture.location.longitude.toFixed(6) : 'Not available';
+
+                const keywords = (capture.keywords && capture.keywords.length)
+                ? capture.keywords.map(k => `#${k}`).join(' ')
+                : '—';
+
+                y = drawRow('Timestamp', ts, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Latitude',  lat, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Longitude', lon, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Keywords',  keywords, y) + EXPORT_CONFIG.rowGap;
+
+                // --- comment block (fixed space, fixed char wrapping) ---
+                const commentRaw = (capture.comment || '').slice(0, EXPORT_CONFIG.commentMaxChars);
+                const commentLines = wrapByChars(commentRaw, EXPORT_CONFIG.commentCharsPerLine, EXPORT_CONFIG.commentLines);
+
+                // label
+                setFont(650, EXPORT_CONFIG.labelSize);
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillText('Comment', xLabel, y);
+
+                // comment lines
+                setFont(500, EXPORT_CONFIG.valueSize);
+                ctx.fillStyle = '#1a1a1a';
+
+                let cy = y; // first comment line aligns with label row
+                for (let i = 0; i < EXPORT_CONFIG.commentLines; i++) {
+                ctx.fillText(commentLines[i] || '', xValue, cy);
+                cy += EXPORT_CONFIG.lineHeight;
                 }
 
-                ctx.fillStyle = EXPORT_CONFIG.textColor;
-
-                let y = img.height + EXPORT_CONFIG.lineSpacing + 10;
-                const x = EXPORT_CONFIG.padding;
-                const labelX = x;
-                const valueX = x + EXPORT_CONFIG.labelWidth;
-
-                // Timestamp
-                ctx.font = `600 ${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText('Timestamp:', labelX, y);
-                ctx.font = `${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText(formatTimestamp(capture.timestamp), valueX, y);
-
-                // Latitude
-                y += EXPORT_CONFIG.lineSpacing;
-                ctx.font = `600 ${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText('Latitude:', labelX, y);
-                ctx.font = `${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText(capture.location ? capture.location.latitude.toFixed(6) : 'None', valueX, y);
-
-                // Longitude
-                y += EXPORT_CONFIG.lineSpacing;
-                ctx.font = `600 ${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText('Longitude:', labelX, y);
-                ctx.font = `${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText(capture.location ? capture.location.longitude.toFixed(6) : 'None', valueX, y);
-
-                // Comment (NOTE: no wrapping yet)
-                y += EXPORT_CONFIG.lineSpacing;
-                ctx.font = `600 ${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText('Comment:', labelX, y);
-                ctx.font = `${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText((capture.comment || '').substring(0, 100), valueX, y);
-
-                // Keywords
-                if (capture.keywords && capture.keywords.length > 0) {
-                y += EXPORT_CONFIG.lineSpacing;
-                ctx.font = `600 ${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText('Keywords:', labelX, y);
-                ctx.font = `${EXPORT_CONFIG.fontSize}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
-                ctx.fillText(capture.keywords.map(k => '#' + k).join(' '), valueX, y);
-                }
-
+                // --- download ---
                 canvas.toBlob((blob) => {
                 if (!blob) return;
                 const url = URL.createObjectURL(blob);
@@ -1311,7 +1363,61 @@
             };
 
             img.src = capture.imageData;
+        }
+
+
+        function wrapText(ctx, text, x, y, maxWidth) {
+            const words = text.split(' ');
+            let line = '';
+            let lineY = y;
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, x, lineY);
+                line = words[n] + ' ';
+                lineY += EXPORT_CONFIG.lineSpacing;
+                } else {
+                line = testLine;
+                }
             }
+            ctx.fillText(line, x, lineY);
+        }
+
+        function wrapByChars(text, charsPerLine, maxLines) {
+            const s = String(text ?? '').replace(/\s+/g, ' ').trim();
+            const lines = [];
+            let i = 0;
+
+            while (i < s.length && lines.length < maxLines) {
+                const slice = s.slice(i, i + charsPerLine);
+
+                // try to break at last space in slice (unless we're at end)
+                let cut = slice.length;
+                if (i + cut < s.length) {
+                const lastSpace = slice.lastIndexOf(' ');
+                if (lastSpace > Math.floor(charsPerLine * 0.6)) cut = lastSpace;
+                }
+
+                lines.push(s.slice(i, i + cut).trim());
+                i += cut;
+
+                // skip spaces after break
+                while (s[i] === ' ') i++;
+            }
+
+            // If still text left, indicate truncation
+            if (i < s.length && lines.length) {
+                lines[lines.length - 1] = lines[lines.length - 1].replace(/\.*$/, '') + '…';
+            }
+
+            // pad out to maxLines (fixed reserved space)
+            while (lines.length < maxLines) lines.push('');
+
+            return lines;
+        }
+
 
         
         function deleteCard(id) {
