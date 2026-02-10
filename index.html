@@ -10,9 +10,10 @@
     <title>Snapper</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <link rel="icon" href="snapper.ico">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
         
         :root {
             --text: #1a1a1a;
@@ -32,7 +33,7 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #fff;
             color: var(--text);
             line-height: 1.5;
@@ -308,7 +309,7 @@
         
         .card-meta {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
+            font-size: 0.8125rem;
             color: var(--text-light);
             margin-bottom: 0.75rem;
             line-height: 1.6;
@@ -326,10 +327,18 @@
         }
         
         .card-comment {
-            font-size: 0.9375rem;
+            font-size: 0.8125rem;
             line-height: 1.5;
             margin-bottom: 0.75rem;
             color: var(--text);
+        }
+        
+        .card-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-right: 0.25rem;
         }
         
         .card-keywords {
@@ -477,6 +486,7 @@
         .meta-info strong {
             min-width: 65px;
             color: var(--text);
+            font-weight: 500;
         }
         
         .meta-info span {
@@ -708,13 +718,7 @@
         <header class="header">
             <div class="logo-container">
                 <div class="logo" id="logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 50 30 L 20 50 L 50 50 Z" fill="#ff6b35" stroke="#333" stroke-width="1.5"/>
-                        <path d="M 50 30 L 80 50 L 50 50 Z" fill="#ff8c5a" stroke="#333" stroke-width="1.5"/>
-                        <path d="M 50 70 L 20 50 L 50 50 Z" fill="#ff6b35" stroke="#333" stroke-width="1.5"/>
-                        <path d="M 50 70 L 80 50 L 50 50 Z" fill="#ff8c5a" stroke="#333" stroke-width="1.5"/>
-                        <circle cx="35" cy="40" r="2.5" fill="#333"/>
-                    </svg>
+                    <img src="snapper.jpg" width="100%">
                 </div>
                 <div class="logo-text-block">
                     <span class="logo-text">Snapper</span>
@@ -822,8 +826,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Comment</label>
-                    <textarea id="commentInput" placeholder="Field observations..."></textarea>
+                    <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Comment</span>
+                        <span id="charCounter" style="font-size: 0.75rem; color: var(--text-light); font-weight: 400;">120</span>
+                    </label>
+                    <textarea id="commentInput" placeholder="Field observations..." maxlength="120"></textarea>
                 </div>
                 
                 <div class="form-group">
@@ -836,7 +843,10 @@
                 </div>
                 
                 <div class="suggested-keywords-section">
-                    <div class="suggested-label">Suggested</div>
+                    <div class="suggested-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Suggested</span>
+                        <button id="clearSavedBtn" style="font-size: 0.75rem; color: var(--error); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; display: none;">Clear all</button>
+                    </div>
                     <div class="suggested-keywords" id="suggestedKeywords"></div>
                 </div>
             </div>
@@ -863,7 +873,8 @@
         let captures = [];
         let gpsWatchId = null;
         let lastPosition = null;   // store latest coords here
-        let gpsState = 'OFF'; 
+        let gpsState = 'OFF';
+        let editingCaptureId = null;  // Track if we're editing an existing capture
         
         const commonKeywords = [
             'crop-health', 'pest', 'disease', 'drought', 'irrigation',
@@ -877,7 +888,7 @@
         width: 1200,
 
         // photo area: scaled to width, height depends on source aspect ratio
-        metaHeight: 420,              // fixed metadata block height (tweak once)
+        metaHeight: 500,              // fixed metadata block height (tweak once)
 
         backgroundColor: '#ffffff',
         borderColor: '#e0e0e0',
@@ -888,7 +899,7 @@
         labelColWidth: 210,
         gutter: 26,
 
-        fontFamily: 'Inter',
+        fontFamily: 'JetBrains Mono',
         labelSize: 28,
         valueSize: 28,
         headerSize: 34,
@@ -897,7 +908,7 @@
         rowGap: 14,
 
         // comment formatting
-        commentMaxChars: 200,
+        commentMaxChars: 120,
         commentLines: 3,              // fixed # of lines reserved for comment
         commentCharsPerLine: 54       // fixed wrap width by characters
         };
@@ -940,9 +951,23 @@
                 }
             });
             
+            // Character counter for comment textarea
+            const commentInput = document.getElementById('commentInput');
+            const charCounter = document.getElementById('charCounter');
+            commentInput.addEventListener('input', () => {
+                const remaining = 120 - commentInput.value.length;
+                charCounter.textContent = remaining;
+                if (remaining <= 20) {
+                    charCounter.style.color = 'var(--error)';
+                } else {
+                    charCounter.style.color = 'var(--text-light)';
+                }
+            });
+            
             document.getElementById('downloadAllBtn').addEventListener('click', downloadAllImages);
             document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
             document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+            document.getElementById('clearSavedBtn').addEventListener('click', clearSavedKeywords);
             
             document.getElementById('detailsModal').addEventListener('click', (e) => {
                 if (e.target.id === 'detailsModal') closeModal();
@@ -1071,22 +1096,44 @@
 
         
         function openModal() {
+            editingCaptureId = null;  // Reset edit mode
             document.getElementById('detailsModal').classList.add('active');
-            document.getElementById('commentInput').value = '';
+            const commentInput = document.getElementById('commentInput');
+            commentInput.value = '';
+            document.getElementById('charCounter').textContent = '120';
+            document.getElementById('charCounter').style.color = 'var(--text-light)';
             currentCapture.keywords = [];
+            
+            // Reset modal title and button text
+            document.querySelector('.modal-title').textContent = 'Add Details';
+            document.getElementById('saveBtn').textContent = 'Save';
+            
             renderSelectedKeywords();
         }
         
         function closeModal() {
             document.getElementById('detailsModal').classList.remove('active');
             currentCapture = { imageData: null, timestamp: null, location: null, comment: '', keywords: [] };
+            editingCaptureId = null;  // Reset edit mode
         }
         
         function addKeyword() {
             const input = document.getElementById('keywordInput');
-            const keyword = input.value.trim().toLowerCase().replace(/^#/, '').replace(/[^a-z0-9_-]/g, '');
+            let keyword = input.value.trim().toLowerCase();
             
             if (!keyword) return;
+            
+            // Remove # if user typed it
+            keyword = keyword.replace(/^#/, '');
+            
+            // Sanitize: only allow alphanumeric, dash, and underscore
+            keyword = keyword.replace(/[^a-z0-9\-_]/g, '');
+            
+            if (!keyword) {
+                showToast('Invalid characters', 'error');
+                input.value = '';
+                return;
+            }
             
             if (currentCapture.keywords.length >= 3) {
                 showToast('Maximum 3 keywords', 'error');
@@ -1100,7 +1147,7 @@
             
             currentCapture.keywords.push(keyword);
             savedKeywords.add(keyword);
-            saveData();
+            // Don't save to localStorage until capture is saved
             
             input.value = '';
             renderSelectedKeywords();
@@ -1117,7 +1164,7 @@
             
             currentCapture.keywords.push(keyword);
             savedKeywords.add(keyword);
-            saveData();
+            // Don't save to localStorage until capture is saved
             
             renderSelectedKeywords();
             renderSuggestedKeywords();
@@ -1127,6 +1174,22 @@
             currentCapture.keywords = currentCapture.keywords.filter(k => k !== keyword);
             renderSelectedKeywords();
             renderSuggestedKeywords();
+        }
+        
+        function deleteSavedKeyword(keyword, event) {
+            event.stopPropagation();
+            savedKeywords.delete(keyword);
+            saveData();
+            renderSuggestedKeywords();
+            showToast('Keyword removed', 'success');
+        }
+        
+        function clearSavedKeywords() {
+            if (!confirm('Clear all keywords? You can add them back later if needed.')) return;
+            savedKeywords.clear();
+            saveData();
+            renderSuggestedKeywords();
+            showToast('Keywords cleared', 'success');
         }
         
         function renderSelectedKeywords() {
@@ -1141,15 +1204,21 @@
         
         function renderSuggestedKeywords() {
             const container = document.getElementById('suggestedKeywords');
-            const allSuggestions = [...savedKeywords, ...commonKeywords];
-            const unique = [...new Set(allSuggestions)];
-            const available = unique.filter(k => !currentCapture.keywords.includes(k));
+            const clearBtn = document.getElementById('clearSavedBtn');
             
-            container.innerHTML = available.slice(0, 12).map(k => `
-                <div class="keyword-pill suggested" onclick="addSuggestedKeyword('${k}')">
-                    #${k}
-                </div>
-            `).join('');
+            // All keywords are now in savedKeywords
+            const available = [...savedKeywords].filter(k => !currentCapture.keywords.includes(k));
+            
+            // Show clear button if there are any keywords
+            clearBtn.style.display = savedKeywords.size > 0 ? 'inline' : 'none';
+            
+            container.innerHTML = available.slice(0, 12).map(k => {
+                return `
+                    <div class="keyword-pill suggested" onclick="addSuggestedKeyword('${k}')">
+                        #${k}<span onclick="deleteSavedKeyword('${k}', event)" style="margin-left: 0.25rem; color: var(--error); cursor: pointer; font-weight: 600;">&times;</span>
+                    </div>
+                `;
+            }).join('');
         }
         
         function saveCapture() {
@@ -1161,22 +1230,36 @@
                 return;
             }
             
-            const capture = {
-                id: Date.now().toString(),
-                imageData: currentCapture.imageData,
-                timestamp: currentCapture.timestamp,
-                location: currentCapture.location,
-                comment: comment,
-                keywords: [...currentCapture.keywords]
-            };
-            
-            captures.unshift(capture);
-            saveData();
-            renderCards();
-            closeModal();
-            showToast('Saved', 'success');
-            animateLogo();
-            swiper.slideTo(1);
+            if (editingCaptureId) {
+                // Update existing capture
+                const capture = captures.find(c => c.id === editingCaptureId);
+                if (capture) {
+                    capture.comment = comment;
+                    capture.keywords = [...currentCapture.keywords];
+                    saveData();
+                    renderCards();
+                    closeModal();
+                    showToast('Updated', 'success');
+                }
+            } else {
+                // Create new capture
+                const capture = {
+                    id: Date.now().toString(),
+                    imageData: currentCapture.imageData,
+                    timestamp: currentCapture.timestamp,
+                    location: currentCapture.location,
+                    comment: comment,
+                    keywords: [...currentCapture.keywords]
+                };
+                
+                captures.unshift(capture);
+                saveData();
+                renderCards();
+                closeModal();
+                showToast('Saved', 'success');
+                animateLogo();
+                swiper.slideTo(1);
+            }
         }
         
         function renderCards() {
@@ -1216,18 +1299,25 @@
                             </div>
                         </div>
                         
-                        <div class="card-comment">
-                            <strong>Comment:</strong> ${escapeHtml(c.comment)}
-                        </div>
-                        
                         ${c.keywords.length > 0 ? `
                             <div class="card-keywords">
-                                <strong style="font-size: 0.8125rem; margin-right: 0.25rem;">Keywords:</strong>
+                                <strong class="card-label">Keywords:</strong>
                                 ${c.keywords.map(k => `<span class="keyword-tag">#${k}</span>`).join(' ')}
                             </div>
                         ` : ''}
-                        
+
+                        <div class="card-comment">
+                            <strong class="card-label">Comment:</strong> ${escapeHtml(c.comment)}
+                        </div>
+
                         <div class="card-actions">
+                            <button class="btn-small" onclick="editCard('${c.id}')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Edit
+                            </button>
                             <button class="btn-small" onclick="downloadCard('${c.id}')">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -1304,14 +1394,9 @@
 
                 // --- header ---
                 let y = imgH + EXPORT_CONFIG.paddingY;
-                setFont(700, EXPORT_CONFIG.headerSize);
+                setFont(500, EXPORT_CONFIG.headerSize);
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillText('Snapper Notes', EXPORT_CONFIG.paddingX, y);
-
-                // tagline (fixed)
-                setFont(500, 22);
-                ctx.fillStyle = '#666';
-                ctx.fillText('Field notes with zero friction', EXPORT_CONFIG.paddingX, y + EXPORT_CONFIG.headerSize + 6);
+                ctx.fillText('Metadata:', EXPORT_CONFIG.paddingX, y);
 
                 y += EXPORT_CONFIG.headerSize + 42;
 
@@ -1330,9 +1415,18 @@
                 y = drawRow('Longitude', lon, y) + EXPORT_CONFIG.rowGap;
                 y = drawRow('Keywords',  keywords, y) + EXPORT_CONFIG.rowGap;
 
-                // --- comment block (fixed space, fixed char wrapping) ---
+                // --- comment block (word-wrapped by pixel width) ---
                 const commentRaw = (capture.comment || '').slice(0, EXPORT_CONFIG.commentMaxChars);
-                const commentLines = wrapByChars(commentRaw, EXPORT_CONFIG.commentCharsPerLine, EXPORT_CONFIG.commentLines);
+                
+                // Calculate max width for comment text
+                const commentMaxWidth = W - xValue - EXPORT_CONFIG.paddingX;
+                
+                // Set font for measuring and rendering comment
+                setFont(500, EXPORT_CONFIG.valueSize);
+                ctx.fillStyle = '#1a1a1a';
+                
+                // Wrap text by actual pixel width
+                const commentLines = wrapTextByWidth(ctx, commentRaw, commentMaxWidth, EXPORT_CONFIG.commentLines);
 
                 // label
                 setFont(650, EXPORT_CONFIG.labelSize);
@@ -1385,40 +1479,100 @@
             ctx.fillText(line, x, lineY);
         }
 
-        function wrapByChars(text, charsPerLine, maxLines) {
+        function wrapTextByWidth(ctx, text, maxWidth, maxLines) {
             const s = String(text ?? '').replace(/\s+/g, ' ').trim();
+            const words = s.split(' ');
             const lines = [];
-            let i = 0;
-
-            while (i < s.length && lines.length < maxLines) {
-                const slice = s.slice(i, i + charsPerLine);
-
-                // try to break at last space in slice (unless we're at end)
-                let cut = slice.length;
-                if (i + cut < s.length) {
-                const lastSpace = slice.lastIndexOf(' ');
-                if (lastSpace > Math.floor(charsPerLine * 0.6)) cut = lastSpace;
+            let currentLine = '';
+            
+            for (let i = 0; i < words.length && lines.length < maxLines; i++) {
+                const testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                
+                if (testWidth > maxWidth && currentLine) {
+                    // Line is too long, push current line and start new one
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                    
+                    // Check if we've reached max lines
+                    if (lines.length >= maxLines) {
+                        break;
+                    }
+                } else {
+                    currentLine = testLine;
                 }
-
-                lines.push(s.slice(i, i + cut).trim());
-                i += cut;
-
-                // skip spaces after break
-                while (s[i] === ' ') i++;
             }
-
-            // If still text left, indicate truncation
-            if (i < s.length && lines.length) {
-                lines[lines.length - 1] = lines[lines.length - 1].replace(/\.*$/, '') + '…';
+            
+            // Add the last line if there's room
+            if (currentLine && lines.length < maxLines) {
+                lines.push(currentLine);
             }
-
-            // pad out to maxLines (fixed reserved space)
+            
+            // If text was truncated, add ellipsis
+            if (words.length > 0) {
+                const allText = words.join(' ');
+                const renderedText = lines.join(' ');
+                if (renderedText.length < allText.length && lines.length > 0) {
+                    lines[lines.length - 1] = lines[lines.length - 1].replace(/\.*$/, '') + '…';
+                }
+            }
+            
+            // Pad out to maxLines for consistent spacing
             while (lines.length < maxLines) lines.push('');
-
+            
             return lines;
         }
 
 
+
+
+        function editCard(id) {
+            const capture = captures.find(c => c.id === id);
+            if (!capture) return;
+            
+            editingCaptureId = id;
+            
+            // Populate currentCapture with existing data
+            currentCapture.imageData = capture.imageData;
+            currentCapture.timestamp = capture.timestamp;
+            currentCapture.location = capture.location;
+            currentCapture.comment = capture.comment;
+            currentCapture.keywords = [...capture.keywords];
+            
+            // Populate modal
+            document.getElementById('previewImage').src = capture.imageData;
+            document.getElementById('timeText').textContent = formatTimestamp(capture.timestamp);
+            
+            if (capture.location) {
+                document.getElementById('locationText').textContent = 
+                    `${capture.location.latitude.toFixed(6)}, ${capture.location.longitude.toFixed(6)}`;
+            } else {
+                document.getElementById('locationText').textContent = 'Not available';
+            }
+            
+            const commentInput = document.getElementById('commentInput');
+            commentInput.value = capture.comment;
+            
+            // Update character counter
+            const remaining = 120 - commentInput.value.length;
+            const charCounter = document.getElementById('charCounter');
+            charCounter.textContent = remaining;
+            if (remaining <= 20) {
+                charCounter.style.color = 'var(--error)';
+            } else {
+                charCounter.style.color = 'var(--text-light)';
+            }
+            
+            renderSelectedKeywords();
+            renderSuggestedKeywords();
+            
+            // Change modal title and button text
+            document.querySelector('.modal-title').textContent = 'Edit Details';
+            document.getElementById('saveBtn').textContent = 'Update';
+            
+            document.getElementById('detailsModal').classList.add('active');
+        }
         
         function deleteCard(id) {
             if (!confirm('Delete this capture?')) return;
@@ -1488,7 +1642,13 @@
                 const keywordsData = localStorage.getItem('snapper_keywords');
                 
                 if (capturesData) captures = JSON.parse(capturesData);
-                if (keywordsData) savedKeywords = new Set(JSON.parse(keywordsData));
+                
+                if (keywordsData) {
+                    savedKeywords = new Set(JSON.parse(keywordsData));
+                } else {
+                    // First load: initialize with common keywords
+                    savedKeywords = new Set(commonKeywords);
+                }
             } catch (e) {
                 console.error('Load error:', e);
             }
