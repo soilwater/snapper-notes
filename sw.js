@@ -1,7 +1,8 @@
 const CACHE_NAME = 'field-snapper-v1';
 const urlsToCache = [
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 // Install service worker and cache resources
