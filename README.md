@@ -1,6 +1,6 @@
 # Field Snapper
 
-**Field notes with zero friction.**
+**Photos with notes, zero friction.**
 
 Field Snapper is a simple, offline-first Progressive Web App for capturing photos, notes, GPS location, and timestamps — with no accounts, no servers, and no setup.
 

@@ -1,7 +1,7 @@
 {
   "name": "Field Snapper",
   "short_name": "Field Snapper",
-  "description": "Annotated photos with zero friction.",
+  "description": "Photos with notes, zero friction.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
