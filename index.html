@@ -483,12 +483,6 @@
             gap: 0.5rem;
         }
         
-        .meta-info strong {
-            min-width: 65px;
-            color: var(--text);
-            font-weight: 500;
-        }
-        
         .meta-info span {
             color: var(--text-light);
         }
@@ -821,8 +815,8 @@
                 <img id="previewImage" class="preview-image" alt="Preview">
                 
                 <div class="meta-info" id="metadataInfo">
-                    <div><strong>Time:</strong> <span id="timeText"></span></div>
-                    <div><strong>GPS:</strong> <span id="locationText">Getting location...</span></div>
+                    <div>Time: <span id="timeText"></span></div>
+                    <div>GPS: <span id="locationText">Getting location...</span></div>
                 </div>
                 
                 <div class="form-group">
@@ -1377,7 +1371,7 @@
                 };
 
                 const drawRow = (label, value, y) => {
-                setFont(650, EXPORT_CONFIG.labelSize);
+                setFont(500, EXPORT_CONFIG.labelSize);
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillText(label, xLabel, y);
 
@@ -1425,7 +1419,7 @@
                 const commentLines = wrapTextByWidth(ctx, commentRaw, commentMaxWidth, EXPORT_CONFIG.commentLines);
 
                 // label
-                setFont(650, EXPORT_CONFIG.labelSize);
+                setFont(500, EXPORT_CONFIG.labelSize);
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillText('Comment', xLabel, y);
 
