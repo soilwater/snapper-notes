@@ -1,7 +1,7 @@
 {
-  "name": "Snapper Notes",
-  "short_name": "Snapper",
-  "description": "Field notes with zero friction. Capture photos, notes, GPS, and timestamps—offline, no account.",
+  "name": "Field Snapper",
+  "short_name": "Field Snapper",
+  "description": "Annotated photos with zero friction.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,15 +10,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg viewBox='0 0 192 192' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%23ffffff' width='192' height='192' rx='32'/%3E%3Cpath d='M 96 60 L 40 100 L 96 100 Z' fill='%23ff6b35' stroke='%231a1a1a' stroke-width='3'/%3E%3Cpath d='M 96 60 L 152 100 L 96 100 Z' fill='%23ff8c5a' stroke='%231a1a1a' stroke-width='3'/%3E%3Cpath d='M 96 140 L 40 100 L 96 100 Z' fill='%23ff6b35' stroke='%231a1a1a' stroke-width='3'/%3E%3Cpath d='M 96 140 L 152 100 L 96 100 Z' fill='%23ff8c5a' stroke='%231a1a1a' stroke-width='3'/%3E%3Ccircle cx='70' cy='80' r='5' fill='%231a1a1a'/%3E%3C/svg%3E",
+      "src": "snapper-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%23ffffff' width='512' height='512' rx='64'/%3E%3Cpath d='M 256 160 L 106 266 L 256 266 Z' fill='%23ff6b35' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpath d='M 256 160 L 406 266 L 256 266 Z' fill='%23ff8c5a' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpath d='M 256 372 L 106 266 L 256 266 Z' fill='%23ff6b35' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpath d='M 256 372 L 406 266 L 256 266 Z' fill='%23ff8c5a' stroke='%231a1a1a' stroke-width='6'/%3E%3Ccircle cx='186' cy='213' r='13' fill='%231a1a1a'/%3E%3C/svg%3E",
+      "src": "snapper-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

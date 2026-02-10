@@ -4,8 +4,6 @@
 
 Field Snapper is a simple, offline-first Progressive Web App for capturing photos, notes, GPS location, and timestamps — with no accounts, no servers, and no setup.
 
-Designed for field work, labs, offices, and anywhere observations matter.
-
 ---
 
 ## What Field Snapper Does

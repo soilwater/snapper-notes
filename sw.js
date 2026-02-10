@@ -1,6 +1,6 @@
-const CACHE_NAME = 'snapper-v1';
+const CACHE_NAME = 'field-snapper-v1';
 const urlsToCache = [
-  '/snapper.html',
+  '/index.html',
   '/manifest.json'
 ];
 
