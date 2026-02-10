@@ -323,7 +323,7 @@
         .card-meta-label {
             min-width: 75px;
             color: var(--text);
-            font-weight: 500;
+            font-weight: 300;
         }
         
         .card-comment {
@@ -336,7 +336,7 @@
         .card-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8125rem;
-            font-weight: 500;
+            font-weight: 300;
             color: var(--text);
             margin-right: 0.25rem;
         }
@@ -1301,13 +1301,13 @@
                         
                         ${c.keywords.length > 0 ? `
                             <div class="card-keywords">
-                                <strong class="card-label">Keywords:</strong>
+                                <span class="card-label">Keywords:</span>
                                 ${c.keywords.map(k => `<span class="keyword-tag">#${k}</span>`).join(' ')}
                             </div>
                         ` : ''}
 
                         <div class="card-comment">
-                            <strong class="card-label">Comment:</strong> ${escapeHtml(c.comment)}
+                            <span class="card-label">Comment:</span> ${escapeHtml(c.comment)}
                         </div>
 
                         <div class="card-actions">
