@@ -1,14 +1,14 @@
-# Snapper Notes
+# Field Snapper
 
 **Field notes with zero friction.**
 
-Snapper Notes is a simple, offline-first Progressive Web App for capturing photos, notes, GPS location, and timestamps — with no accounts, no servers, and no setup.
+Field Snapper is a simple, offline-first Progressive Web App for capturing photos, notes, GPS location, and timestamps — with no accounts, no servers, and no setup.
 
 Designed for field work, labs, offices, and anywhere observations matter.
 
 ---
 
-## What Snapper Notes Does
+## What Field Snapper Does
 
 - 📸 Take a photo using your device camera  
 - 📝 Add a short comment (your note)  
@@ -99,7 +99,7 @@ If you delete browser storage or clear the app, the data is removed.
 
 ## Design Philosophy
 
-Snapper Notes is built around a single idea:
+Field Snapper is built around a single idea:
 
 > Capture first. Think later.
 
