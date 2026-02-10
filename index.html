@@ -13,7 +13,7 @@
     <link rel="icon" href="snapper.ico">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
         
         :root {
             --text: #1a1a1a;
@@ -705,6 +705,18 @@
             white-space: nowrap;
         }
 
+        .gallery-footer {
+            padding: 0.75rem 1rem calc(env(safe-area-inset-bottom) + 0.75rem);
+            font-size: 0.55rem;
+            color: #512888;            /* K-State official purple */
+            opacity: 1.0;
+            text-align: center;
+            line-height: 1.4;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+
     </style>
 </head>
 <body>
@@ -717,7 +729,8 @@
                 <div class="logo-text-block">
                     <span class="logo-text">Field Snapper</span>
                     <span class="tagline">Photos with notes, zero friction</span>
-                </div>            </div>
+                </div>
+            </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <div class="gps-indicator">
                     <div class="gps-dot" id="gpsDot"></div>
@@ -749,6 +762,7 @@
                             <p>Tap to take a photo</p>
                         </div>
                         <input type="file" id="imageInput" accept="image/*" capture="environment" class="hidden">
+
                     </div>
                 </div>
 
@@ -795,6 +809,9 @@
                                 <h3>No captures yet</h3>
                                 <p>Swipe left to start capturing</p>
                             </div>
+                        </div>
+                        <div class="gallery-footer">
+                            Soil Water Lab · Department of Agronomy · Kansas State University
                         </div>
                     </div>
                 </div>
@@ -1367,26 +1384,26 @@
                 const xValue = xLabel + EXPORT_CONFIG.labelColWidth + EXPORT_CONFIG.gutter;
 
                 const setFont = (weight, size) => {
-                ctx.font = `${weight} ${size}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
+                    ctx.font = `${weight} ${size}px ${EXPORT_CONFIG.fontFamily}, sans-serif`;
                 };
 
                 const drawRow = (label, value, y) => {
-                setFont(500, EXPORT_CONFIG.labelSize);
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillText(label, xLabel, y);
+                    setFont(500, EXPORT_CONFIG.labelSize);
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillText(label, xLabel, y);
 
-                setFont(500, EXPORT_CONFIG.valueSize);
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillText(value, xValue, y);
+                    setFont(500, EXPORT_CONFIG.valueSize);
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillText(value, xValue, y);
 
-                return y + EXPORT_CONFIG.lineHeight; // fixed advance
+                    return y + EXPORT_CONFIG.lineHeight; // fixed advance
                 };
 
                 // --- header ---
                 let y = imgH + EXPORT_CONFIG.paddingY;
-                setFont(500, EXPORT_CONFIG.headerSize);
+                setFont(600, EXPORT_CONFIG.headerSize);
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillText('Metadata:', EXPORT_CONFIG.paddingX, y);
+                ctx.fillText('Metadata', EXPORT_CONFIG.paddingX, y);
 
                 y += EXPORT_CONFIG.headerSize + 42;
 
@@ -1400,10 +1417,10 @@
                 ? capture.keywords.map(k => `#${k}`).join(' ')
                 : '—';
 
-                y = drawRow('Timestamp', ts, y) + EXPORT_CONFIG.rowGap;
-                y = drawRow('Latitude',  lat, y) + EXPORT_CONFIG.rowGap;
-                y = drawRow('Longitude', lon, y) + EXPORT_CONFIG.rowGap;
-                y = drawRow('Keywords',  keywords, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Timestamp:', ts, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Latitude:',  lat, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Longitude:', lon, y) + EXPORT_CONFIG.rowGap;
+                y = drawRow('Keywords:',  keywords, y) + EXPORT_CONFIG.rowGap;
 
                 // --- comment block (word-wrapped by pixel width) ---
                 const commentRaw = (capture.comment || '').slice(0, EXPORT_CONFIG.commentMaxChars);
@@ -1421,7 +1438,7 @@
                 // label
                 setFont(500, EXPORT_CONFIG.labelSize);
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillText('Comment', xLabel, y);
+                ctx.fillText('Comment:', xLabel, y);
 
                 // comment lines
                 setFont(500, EXPORT_CONFIG.valueSize);
